@@ -35,6 +35,37 @@
       font-size: 16px;
       color: #888;
     }
+
+    /* Mobile control buttons */
+    #mobileControls {
+      margin: 20px auto;
+      max-width: 280px;
+      user-select: none;
+    }
+    #mobileControls button.controlBtn {
+      font-size: 2rem;
+      margin: 5px;
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background-color: #0f0;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      outline: none;
+    }
+    #mobileControls button.controlBtn:active {
+      background-color: #0c0;
+    }
+    /* Arrange buttons */
+    #mobileControls .row {
+      display: flex;
+      justify-content: center;
+    }
+    #mobileControls .spacer {
+      width: 60px; /* same width as buttons to center arrows */
+    }
   </style>
 </head>
 <body>
@@ -44,6 +75,21 @@
 <div id="gameOver">Game Over</div>
 <button id="startBtn">Start Game</button>
 <button id="restartBtn" style="display:none;">Restart</button>
+
+<!-- Mobile controls -->
+<div id="mobileControls">
+  <div class="row">
+    <button class="controlBtn" data-dir="up">⬆️</button>
+  </div>
+  <div class="row">
+    <button class="controlBtn" data-dir="left">⬅️</button>
+    <div class="spacer"></div>
+    <button class="controlBtn" data-dir="right">➡️</button>
+  </div>
+  <div class="row">
+    <button class="controlBtn" data-dir="down">⬇️</button>
+  </div>
+</div>
 
 <div id="footer">Made By Rohan</div>
 
@@ -56,6 +102,7 @@
 
   let snake, direction, apple, score, speed, lastFrameTime = 0;
   let gameRunning = false;
+  let nextDirection = null; // to buffer direction changes
 
   const scoreEl = document.getElementById('score');
   const gameOverEl = document.getElementById('gameOver');
@@ -65,6 +112,7 @@
   function initGame() {
     snake = [{ x: 10, y: 10 }];
     direction = { x: 1, y: 0 };
+    nextDirection = null;
     placeApple();
     score = 0;
     speed = 5;
@@ -132,6 +180,15 @@
   }
 
   function moveSnake() {
+    // Apply buffered direction if valid
+    if (nextDirection) {
+      // Prevent reversing
+      if (!(nextDirection.x === -direction.x && nextDirection.y === -direction.y)) {
+        direction = nextDirection;
+      }
+      nextDirection = null;
+    }
+
     const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
 
     if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
@@ -181,10 +238,32 @@
 
   document.addEventListener('keydown', e => {
     if (!gameRunning) return;
-    if (e.key === 'ArrowUp' && direction.y !== 1) direction = { x: 0, y: -1 };
-    if (e.key === 'ArrowDown' && direction.y !== -1) direction = { x: 0, y: 1 };
-    if (e.key === 'ArrowLeft' && direction.x !== 1) direction = { x: -1, y: 0 };
-    if (e.key === 'ArrowRight' && direction.x !== -1) direction = { x: 1, y: 0 };
+    if (e.key === 'ArrowUp' && direction.y !== 1) nextDirection = { x: 0, y: -1 };
+    if (e.key === 'ArrowDown' && direction.y !== -1) nextDirection = { x: 0, y: 1 };
+    if (e.key === 'ArrowLeft' && direction.x !== 1) nextDirection = { x: -1, y: 0 };
+    if (e.key === 'ArrowRight' && direction.x !== -1) nextDirection = { x: 1, y: 0 };
+  });
+
+  // Mobile control buttons
+  const dirMap = {
+    up: { x: 0, y: -1 },
+    down: { x: 0, y: 1 },
+    left: { x: -1, y: 0 },
+    right: { x: 1, y: 0 },
+  };
+
+  document.querySelectorAll('.controlBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!gameRunning) return;
+      const d = btn.getAttribute('data-dir');
+      if (dirMap[d]) {
+        // Prevent reverse direction
+        const newDir = dirMap[d];
+        if (!(newDir.x === -direction.x && newDir.y === -direction.y)) {
+          nextDirection = newDir;
+        }
+      }
+    });
   });
 
   startBtn.onclick = () => {
