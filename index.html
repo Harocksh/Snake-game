@@ -309,6 +309,12 @@
     initGame();
     requestAnimationFrame(gameLoop);
   });
+  window.addEventListener('keydown', function (e) {
+  const keysToBlock = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+  if (keysToBlock.includes(e.key) && gameRunning) {
+    e.preventDefault();
+  }
+}, { passive: false });
 </script>
 
 </body>
