@@ -1,20 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1563528050387560"
+     crossorigin="anonymous"></script>
   <meta charset="UTF-8" />
   <title>Snake Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       background: #111;
       color: #fff;
       text-align: center;
       font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
     }
     canvas {
       background: #222;
       display: block;
       margin: 20px auto;
       border: 2px solid #0f0;
+      width: 400px;
+      height: 400px;
+      max-width: 100vw;
+      height: auto;
+      aspect-ratio: 1 / 1;
     }
     button {
       padding: 10px 20px;
@@ -34,19 +45,18 @@
       margin-top: 30px;
       font-size: 16px;
       color: #888;
+      padding-bottom: 10px;
     }
 
     /* Mobile control buttons */
     #mobileControls {
-      margin: 20px auto;
-      max-width: 280px;
+      margin: 10px auto 30px;
+      max-width: 400px;
       user-select: none;
     }
     #mobileControls button.controlBtn {
-      font-size: 2rem;
+      font-size: 2.5rem;
       margin: 5px;
-      width: 60px;
-      height: 60px;
       border-radius: 12px;
       background-color: #0f0;
       border: none;
@@ -54,17 +64,45 @@
       font-weight: bold;
       cursor: pointer;
       outline: none;
+      flex-grow: 1;
+      height: 70px;
+      max-width: 90px;
+      min-width: 60px;
     }
     #mobileControls button.controlBtn:active {
       background-color: #0c0;
     }
-    /* Arrange buttons */
     #mobileControls .row {
       display: flex;
       justify-content: center;
+      gap: 10px;
     }
     #mobileControls .spacer {
-      width: 60px; /* same width as buttons to center arrows */
+      flex-grow: 1;
+      min-width: 60px;
+      max-width: 90px;
+    }
+
+    /* Responsive tweaks for mobile */
+    @media (max-width: 450px) {
+      canvas {
+        width: 95vw;
+        height: auto;
+      }
+      #mobileControls {
+        max-width: 95vw;
+        padding: 0 10px;
+      }
+      #mobileControls button.controlBtn {
+        font-size: 2rem;
+        height: 60px;
+        max-width: none;
+        min-width: 0;
+        flex-grow: 1;
+      }
+      #mobileControls .row {
+        gap: 8px;
+      }
     }
   </style>
 </head>
@@ -79,15 +117,15 @@
 <!-- Mobile controls -->
 <div id="mobileControls">
   <div class="row">
-    <button class="controlBtn" data-dir="up">⬆️</button>
+    <button class="controlBtn" data-dir="up" aria-label="Up">⬆️</button>
   </div>
   <div class="row">
-    <button class="controlBtn" data-dir="left">⬅️</button>
+    <button class="controlBtn" data-dir="left" aria-label="Left">⬅️</button>
     <div class="spacer"></div>
-    <button class="controlBtn" data-dir="right">➡️</button>
+    <button class="controlBtn" data-dir="right" aria-label="Right">➡️</button>
   </div>
   <div class="row">
-    <button class="controlBtn" data-dir="down">⬇️</button>
+    <button class="controlBtn" data-dir="down" aria-label="Down">⬇️</button>
   </div>
 </div>
 
@@ -97,6 +135,7 @@
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
 
+  // Grid size and tile count stays fixed on 400x400 canvas
   const gridSize = 20;
   const tileCount = canvas.width / gridSize;
 
@@ -180,9 +219,7 @@
   }
 
   function moveSnake() {
-    // Apply buffered direction if valid
     if (nextDirection) {
-      // Prevent reversing
       if (!(nextDirection.x === -direction.x && nextDirection.y === -direction.y)) {
         direction = nextDirection;
       }
@@ -244,40 +281,37 @@
     if (e.key === 'ArrowRight' && direction.x !== -1) nextDirection = { x: 1, y: 0 };
   });
 
-  // Mobile control buttons
   const dirMap = {
     up: { x: 0, y: -1 },
-    down: { x: 0, y: 1 },
-    left: { x: -1, y: 0 },
-    right: { x: 1, y: 0 },
-  };
+    down: { x:
+0, y: 1 },
+left: { x: -1, y: 0 },
+right: { x: 1, y: 0 },
+};
 
-  document.querySelectorAll('.controlBtn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (!gameRunning) return;
-      const d = btn.getAttribute('data-dir');
-      if (dirMap[d]) {
-        // Prevent reverse direction
-        const newDir = dirMap[d];
-        if (!(newDir.x === -direction.x && newDir.y === -direction.y)) {
-          nextDirection = newDir;
-        }
-      }
-    });
-  });
+document.querySelectorAll('.controlBtn').forEach(btn => {
+btn.addEventListener('click', () => {
+const dir = btn.dataset.dir;
+const newDir = dirMap[dir];
+if (
+gameRunning &&
+!(newDir.x === -direction.x && newDir.y === -direction.y)
+) {
+nextDirection = newDir;
+}
+});
+});
 
-  startBtn.onclick = () => {
-    initGame();
-    startBtn.style.display = 'none';
-    requestAnimationFrame(gameLoop);
-  };
+startBtn.addEventListener('click', () => {
+initGame();
+requestAnimationFrame(gameLoop);
+});
 
-  restartBtn.onclick = () => {
-    initGame();
-    requestAnimationFrame(gameLoop);
-  };
+restartBtn.addEventListener('click', () => {
+initGame();
+requestAnimationFrame(gameLoop);
+});
 </script>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1563528050387560"
-     crossorigin="anonymous"></script>
-</body>
+
+</body> 
 </html>
