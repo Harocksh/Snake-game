@@ -7,6 +7,12 @@
   <title>Snake Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    @media (min-width: 451px) {
+  #mobileControls {
+    display: none;
+  }
+}
+
     body {
       background: #111;
       color: #fff;
@@ -49,11 +55,13 @@
     }
 
     /* Mobile control buttons */
-    #mobileControls {
-      margin: 10px auto 30px;
-      max-width: 400px;
-      user-select: none;
-    }
+#mobileControls {
+  display: block;
+  margin: 10px auto 30px;
+  max-width: 400px;
+  user-select: none;
+}
+
     #mobileControls button.controlBtn {
       font-size: 2.5rem;
       margin: 5px;
