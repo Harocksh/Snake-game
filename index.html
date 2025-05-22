@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snake Game</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      text-align: center;
+      font-family: sans-serif;
+    }
+    canvas {
+      background: #222;
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #0f0;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 10px;
+      background: #0f0;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #gameOver {
+      font-size: 28px;
+      color: red;
+      display: none;
+    }
+    #footer {
+      margin-top: 30px;
+      font-size: 16px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="game" width="400" height="400"></canvas>
+<div id="score">Score: 0</div>
+<div id="gameOver">Game Over</div>
+<button id="startBtn">Start Game</button>
+<button id="restartBtn" style="display:none;">Restart</button>
+
+<div id="footer">Made By Rohan</div>
+
+<script>
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  const gridSize = 20;
+  const tileCount = canvas.width / gridSize;
+
+  let snake, direction, apple, score, speed, lastFrameTime = 0;
+  let gameRunning = false;
+
+  const scoreEl = document.getElementById('score');
+  const gameOverEl = document.getElementById('gameOver');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+
+  function initGame() {
+    snake = [{ x: 10, y: 10 }];
+    direction = { x: 1, y: 0 };
+    placeApple();
+    score = 0;
+    speed = 5;
+    gameRunning = true;
+    gameOverEl.style.display = 'none';
+    restartBtn.style.display = 'none';
+    scoreEl.textContent = 'Score: 0';
+  }
+
+  function placeApple() {
+    while (true) {
+      apple = {
+        x: Math.floor(Math.random() * tileCount),
+        y: Math.floor(Math.random() * tileCount)
+      };
+      if (!snake.some(s => s.x === apple.x && s.y === apple.y)) break;
+    }
+  }
+
+  function drawSnake() {
+    for (let i = 0; i < snake.length; i++) {
+      ctx.fillStyle = '#0f0';
+      ctx.fillRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize, gridSize);
+
+      if (i === 0) {
+        ctx.fillStyle = '#fff';
+        const head = snake[0];
+        const eyeSize = 4;
+        const offset = 3;
+
+        let eye1 = { x: 0, y: 0 };
+        let eye2 = { x: 0, y: 0 };
+
+        if (direction.x === 1) {
+          eye1 = { x: head.x * gridSize + gridSize - eyeSize - offset, y: head.y * gridSize + offset };
+          eye2 = { x: head.x * gridSize + gridSize - eyeSize - offset, y: head.y * gridSize + gridSize - eyeSize - offset };
+        } else if (direction.x === -1) {
+          eye1 = { x: head.x * gridSize + offset, y: head.y * gridSize + offset };
+          eye2 = { x: head.x * gridSize + offset, y: head.y * gridSize + gridSize - eyeSize - offset };
+        } else if (direction.y === 1) {
+          eye1 = { x: head.x * gridSize + offset, y: head.y * gridSize + gridSize - eyeSize - offset };
+          eye2 = { x: head.x * gridSize + gridSize - eyeSize - offset, y: head.y * gridSize + gridSize - eyeSize - offset };
+        } else if (direction.y === -1) {
+          eye1 = { x: head.x * gridSize + offset, y: head.y * gridSize + offset };
+          eye2 = { x: head.x * gridSize + gridSize - eyeSize - offset, y: head.y * gridSize + offset };
+        }
+
+        ctx.fillRect(eye1.x, eye1.y, eyeSize, eyeSize);
+        ctx.fillRect(eye2.x, eye2.y, eyeSize, eyeSize);
+      }
+    }
+  }
+
+  function drawApple() {
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.arc(
+      apple.x * gridSize + gridSize / 2,
+      apple.y * gridSize + gridSize / 2,
+      gridSize / 2.5,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  function moveSnake() {
+    const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+      endGame();
+      return;
+    }
+
+    if (snake.some(s => s.x === head.x && s.y === head.y)) {
+      endGame();
+      return;
+    }
+
+    snake.unshift(head);
+
+    if (head.x === apple.x && head.y === apple.y) {
+      score++;
+      speed += 0.3;
+      scoreEl.textContent = 'Score: ' + score;
+      placeApple();
+    } else {
+      snake.pop();
+    }
+  }
+
+  function endGame() {
+    gameRunning = false;
+    gameOverEl.style.display = 'block';
+    restartBtn.style.display = 'inline-block';
+  }
+
+  function gameLoop(timestamp) {
+    if (!gameRunning) return;
+
+    const timeSinceLastFrame = timestamp - lastFrameTime;
+    const frameInterval = 1000 / speed;
+
+    if (timeSinceLastFrame > frameInterval) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      moveSnake();
+      drawApple();
+      drawSnake();
+      lastFrameTime = timestamp;
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (!gameRunning) return;
+    if (e.key === 'ArrowUp' && direction.y !== 1) direction = { x: 0, y: -1 };
+    if (e.key === 'ArrowDown' && direction.y !== -1) direction = { x: 0, y: 1 };
+    if (e.key === 'ArrowLeft' && direction.x !== 1) direction = { x: -1, y: 0 };
+    if (e.key === 'ArrowRight' && direction.x !== -1) direction = { x: 1, y: 0 };
+  });
+
+  startBtn.onclick = () => {
+    initGame();
+    startBtn.style.display = 'none';
+    requestAnimationFrame(gameLoop);
+  };
+
+  restartBtn.onclick = () => {
+    initGame();
+    requestAnimationFrame(gameLoop);
+  };
+</script>
+
+</body>
+</html>
